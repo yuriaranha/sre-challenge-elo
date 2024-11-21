@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-challenge-app
+  namespace: sre-challenge
+  labels:
+    app: sre-challenge-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sre-challenge-app
+  template:
+    metadata:
+      labels:
+        app: sre-challenge-app
+    spec:
+      containers:
+      - name: sre-challenge-app
+        image: demo/sre-challenge:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://db:3306/emp?allowPublicKeyRetrieval=true&useSSL=false
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        resources:
+          requests:
+            memory: "128Mi" # Garante 128Mi de memória
+            cpu: "250m"     # Garante 250m (0.25 vCPU)
+          limits:
+            memory: "256Mi" # Máximo de 256Mi de memória
+            cpu: "500m"     # Máximo de 500m (0.5 vCPU)
