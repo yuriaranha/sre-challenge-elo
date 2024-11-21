@@ -28,6 +28,10 @@ Nesse repositório, fornecemos a você:
 
 1. Instale qualquer cluster K8s local (ex: Minikube) em sua máquina e documente sua configuração, para que possamos executar sua solução.
 
+Documentação de 
+[Configuração Ambiente](./Minikube.md)
+---
+
 ### Parte 1 - Configure os aplicativos
 
 Gostariamos que essa aplicação sre-challenge-app e seu banco de dados fossem executados em um cluster K8s.
@@ -35,7 +39,17 @@ Gostariamos que essa aplicação sre-challenge-app e seu banco de dados fossem e
 Requisitos
 
 1. A aplicação deve ser acessível de fora do cluster.
+<div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+  <img src="out.jpg" alt="Imagem 1" width="500" height="auto">
+  <img src="out2.jpg" alt="Imagem 2" width="500" height="auto">
+</div>
+
 2. Manifestos de implantação do kubernetes para executar com limitação de requests e usando HPA.
+    
+      [deployment-app.yaml](k8s\deployment-app.yaml)
+
+      Utilizei o postman para realizar teste de carga e garantir que o HPA estava funcionando corretamente, não consegui printar pois a carga acabou congelando meu pc, porém consegui o histórico de pods. 
+      <img src="2024-11-21-01_57_36-Kubernetes-Dashboard.png" alt="Imagem 1" width="1000" height="auto">
 
 ### Parte 2 - Corrigir o problema
 
@@ -51,14 +65,32 @@ Requisitos
 
 Escreva aqui sobre o problema, a solução, como você a encontrou e qualquer outra coisa que queira compartilhar sobre ela.
 
+1. No arquivo de configuração [application.properties](src\main\resources\application.properties)
+
+        spring.datasource.url=jdbc:mysql://test:3306/emp?allowPublicKeyRetrieval=true&useSSL=false
+
+    Mostra que a aplicação espera que o banco esteja acessível no host test na porta 3306, com o banco de dados chamado emp.
+    
+    Ajustei isso para usar o Service do Kubernetes como host, que chamaremos de db.
+
+    Desta forma a aplicação ficou running pois conseguiu chegar ao banco. 
+
 ### Parte 3 - Melhores práticas
 
 Essa aplicação tem uma falha de segurança e gostariamos que as credenciais do MYSQL fossem armazenadas em uma secret do Kubernetes.
 
 Requisitos
 1. Manifesto do kubernetes usando a API de secret com as credenciais do Banco para implantação.
+
+      [mysql-secret.yaml](k8s\mysql-secret.yaml)
 2. Manifesto do kunernetes da aplicação com as informações da secret criada anteriormente.
+
+      [deployment-app.yaml](k8s\deployment-app.yaml)
+
+      [deployment-db.yaml](k8s\deployment-db.yaml)
 2. Configuração do código da aplicação utilizando uma variável que foi referenciada no secrets do K8s (Application Properties do Java)
+
+      [application.properties](src\main\resources\application.properties)
 
 ### Parte 4 - Perguntas
 
@@ -66,9 +98,37 @@ Sinta-se à vontade para expressar seus pensamentos e compartilhar suas experiê
 
 Requisitos
 O que você faria para melhorar essa configuração e torná-la “pronta para produção”?
+
+- Em [deployment-app.yaml](k8s\deployment-app.yaml) liha 27 removeria 
+
+  1. `allowPublicKeyRetrieval=true` pois a melhor prática seria configurar um certificado seguro no servidor MySQL e usar um cliente que já tenha a chave pública armazenada.
+  2. `useSSL=false` Habilitaria SSL para que os dados sejam criptografados durante a transmissão.
+
+  3. Observabilidade e logs - Configurar ferramentas de monitoramento e logs para facilitar a identificação de problemas.
+
+  4. TLS e autenticação - Implementar TLS nos serviços para criptografar o tráfego.
+
+  5. LoadBalancer - Criaria um balanceador de carga externo em um provedor de nuvem - restringindo os acesso com regras de firewall.
+
 Existem 2 microsserviços mantidos por 2 equipes diferentes. Cada equipe deve ter acesso apenas ao seu serviço dentro do cluster. Como você abordaria isso?
+- Autenticação e Autorização via RBAC -
+Implementaria RBAC (Role-Based Access Control) no cluster para garantir que cada equipe tenha acesso apenas aos recursos (pods, serviços, etc.) do microsserviço sob sua responsabilidade.
+
+    [role-app.yaml](prd\role-app.yaml)
+
+- Segurança na comunicação dos pods - Usaria Network Policies para controlar a comunicação entre serviços.
+
 Como você evitaria que outros serviços em execução no cluster se comunicassem com o sre-challenge-app?
 
+- Namespaces separados para microsserviços:
+
+1. Criar namespaces diferentes para cada serviço, isolando os recursos.
+
+    Exemplo:
+      
+        Namespace team-a-service para sre-challenge-app.
+        Namespace team-b-service para outro microsserviço.
+    Isso impede que equipes alterem ou visualizem acidentalmente os recursos de outras equipes.
 
 ## O que é importante para nós?
 
@@ -82,4 +142,12 @@ Ao terminar o desafio, convide o 'ELO-SRE' para contribuir com o seu repositóri
 
 <p align="center">
   <img src="ca.jpg" alt="Challange accepted" />
+</p>
+
+# Espero não ter esquecido de nada =D
+
+Yuri Pastore Aranha da Silva
+959348434
+<p align="center">
+  <img src="cc.png" alt="Challange complete" width="600" />
 </p>
