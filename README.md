@@ -146,8 +146,7 @@ Ao terminar o desafio, convide o 'ELO-SRE' para contribuir com o seu repositóri
 
 # Espero não ter esquecido de nada =D
 
-Yuri Pastore Aranha da Silva
-959348434
+Yuri Aranha
 <p align="center">
   <img src="cc.png" alt="Challange complete" width="600" />
 </p>
